@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Which Bin? — HKU Hall Recycling Helper</title>
+<style>
+  :root {
+    --bg: #f4f6f8;
+    --card: #ffffff;
+    --ink: #1f2937;
+    --ink-soft: #5b6472;
+    --line: #e3e7ec;
+    --accent: #0d9488;
+    --refuse: #b91c1c;
+    --refuse-bg: #fef2f2;
+    --unknown-bg: #fffbeb;
+    --unknown-line: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", -apple-system, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 32px 18px 48px; }
+
+  header h1 { font-size: 1.75rem; margin: 0 0 4px; }
+  header p { margin: 0 0 20px; color: var(--ink-soft); }
+  header h1 .q { color: var(--accent); }
+
+  .search-row { display: flex; gap: 10px; }
+  #query {
+    flex: 1; padding: 13px 16px; font-size: 1rem;
+    border: 2px solid var(--line); border-radius: 12px; background: var(--card);
+    color: var(--ink);
+  }
+  #query:focus { outline: none; border-color: var(--accent); }
+  button.go {
+    padding: 0 22px; font-size: 1rem; font-weight: 600; cursor: pointer;
+    border: none; border-radius: 12px; background: var(--accent); color: #fff;
+  }
+  button.go:hover { filter: brightness(1.08); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 24px; }
+  .chips span { font-size: .85rem; color: var(--ink-soft); align-self: center; }
+  .chip {
+    padding: 6px 12px; font-size: .85rem; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 999px;
+    background: var(--card); color: var(--ink);
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  #result { min-height: 10px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 20px 22px; margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(16,24,40,.06);
+  }
+  .verdict {
+    display: inline-block; font-size: .8rem; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 999px; color: #fff; margin-bottom: 10px;
+  }
+  .bin-name { font-size: 1.3rem; font-weight: 700; margin: 0 0 2px; }
+  .item-label { color: var(--ink-soft); font-size: .95rem; margin: 0 0 12px; }
+  .note { margin: 0 0 12px; }
+  .where {
+    font-size: .9rem; background: var(--bg); border-radius: 10px;
+    padding: 10px 12px; margin: 0 0 12px;
+  }
+  .quirk {
+    font-size: .85rem; color: var(--ink-soft);
+    border-left: 3px solid var(--unknown-line); padding-left: 10px; margin: 0 0 12px;
+  }
+  .srclink { font-size: .85rem; }
+  .srclink a { color: var(--accent); }
+
+  .card.refuse { background: var(--refuse-bg); border-color: #f3c2c2; }
+  .card.refuse .verdict { background: var(--refuse); }
+  .card.unknown { background: var(--unknown-bg); border-color: #f3d79a; }
+  .card.unknown .verdict { background: var(--unknown-line); }
+
+  .doesnot h2, .about h2 { font-size: 1.05rem; margin: 28px 0 10px; }
+  .doesnot ul { margin: 0; padding-left: 20px; color: var(--ink-soft); }
+  .doesnot li { margin-bottom: 6px; }
+  .disclaimer {
+    margin-top: 10px; font-size: .9rem; color: var(--ink-soft);
+    background: var(--card); border: 1px dashed var(--line);
+    border-radius: 10px; padding: 10px 14px;
+  }
+  footer {
+    margin-top: 28px; font-size: .8rem; color: var(--ink-soft);
+    border-top: 1px solid var(--line); padding-top: 14px;
+  }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1><span class="q">Which Bin?</span> HKU Hall Recycling Helper</h1>
+    <p>Type an item, get the bin — every answer comes from HKU's published re&nbsp;Campaign recycling rules, nothing invented.</p>
+  </header>
+
+  <div class="search-row">
+    <label for="query" class="sr-only" style="position:absolute;left:-9999px;">Item to recycle</label>
+    <input id="query" type="text" placeholder="e.g. plastic bottle, newspaper, pizza box…" autocomplete="off">
+    <button class="go" id="goBtn">Check</button>
+  </div>
+
+  <div class="chips" id="chips">
+    <span>Try:</span>
+  </div>
+
+  <div id="result" aria-live="polite"></div>
+
+  <section class="doesnot">
+    <h2>What this tool does NOT do</h2>
+    <ul>
+      <li>It does <strong>not</strong> handle hazardous-waste disposal (paint, chemicals, ordinary batteries, medicine, sharps…) — it will refuse and point you to staff.</li>
+      <li>It does <strong>not</strong> override building-staff instructions — on-site instructions always win.</li>
+      <li>It does <strong>not</strong> invent rules — anything missing from the published HKU source gets an honest "not covered", not a guess.</li>
+    </ul>
+    <div class="disclaimer">If hall or building staff give you different instructions on site, follow them — this page is only a reading aid for the published rules.</div>
+  </section>
+
+  <footer>
+    Rules data: <a href="https://www.wastereduction.hku.hk/re-facilities" target="_blank" rel="noopener">HKU re Campaign — recycling facilities</a> &amp;
+    <a href="https://www.wastereduction.hku.hk/recycling-101" target="_blank" rel="noopener">Recycling 101 guide</a>
+    (last checked 10 Sep 2026). Questions about the real rules: <a href="mailto:wastereduction@hku.hk">wastereduction@hku.hk</a>.
+  </footer>
+
+</div>
+
+<script src="rules.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var EXAMPLES = [
+    "plastic bottle", "newspaper", "pizza box",
+    "rechargeable battery", "paint thinner", "glass jar"
+  ];
+
+  var input = document.getElementById("query");
+  var result = document.getElementById("result");
+  var chipsBox = document.getElementById("chips");
+
+  EXAMPLES.forEach(function (text) {
+    var c = document.createElement("button");
+    c.className = "chip";
+    c.type = "button";
+    c.textContent = text;
+    c.addEventListener("click", function () {
+      input.value = text;
+      check();
+    });
+    chipsBox.appendChild(c);
+  });
+
+  document.getElementById("goBtn").addEventListener("click", check);
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") check();
+  });
+
+  function normalise(s) {
+    return s.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+  }
+
+  function findItem(q) {
+    var best = null, bestLen = 0;
+    ITEMS.forEach(function (item) {
+      item.keywords.forEach(function (k) {
+        if (q.indexOf(k) !== -1 && k.length > bestLen) {
+          best = item; bestLen = k.length;
+        }
+      });
+    });
+    return best;
+  }
+
+  function findHazard(q) {
+    for (var i = 0; i < HAZARDOUS.keywords.length; i++) {
+      if (q.indexOf(HAZARDOUS.keywords[i]) !== -1) return true;
+    }
+    return false;
+  }
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function sourceLink() {
+    var p = el("p", "srclink");
+    var a = document.createElement("a");
+    a.href = SOURCE.facilitiesUrl;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = "Source: " + SOURCE.name;
+    p.appendChild(a);
+    return p;
+  }
+
+  function check() {
+    var raw = input.value;
+    var q = normalise(raw);
+    result.innerHTML = "";
+    if (!q) return;
+
+    // 1) Known item? (checked first so "rechargeable battery" is not
+    //    swallowed by the hazardous word "battery")
+    var item = findItem(q);
+    if (item) { renderItem(item); return; }
+
+    // 2) Hazardous / special waste? Firm refusal.
+    if (findHazard(q)) {
+      var card = el("div", "card refuse");
+      card.appendChild(el("span", "verdict", "Cannot help with this"));
+      card.appendChild(el("p", "bin-name", "Hazardous / special waste"));
+      card.appendChild(el("p", "item-label", "You asked about: " + raw.trim()));
+      card.appendChild(el("p", "note", HAZARDOUS.message));
+      result.appendChild(card);
+      return;
+    }
+
+    // 3) Not covered — honest answer, no invented rule.
+    var unk = el("div", "card unknown");
+    unk.appendChild(el("span", "verdict", "Not covered"));
+    unk.appendChild(el("p", "bin-name", "I don't have a published rule for this"));
+    unk.appendChild(el("p", "item-label", "You asked about: " + raw.trim()));
+    unk.appendChild(el("p", "note",
+      "This item is not in the HKU published recycling rules I was built with, and I won't guess. " +
+      "Check the source pages below, or ask your hall staff."
+    ));
+    unk.appendChild(sourceLink());
+    result.appendChild(unk);
+  }
+
+  function renderItem(item) {
+    var bin = BINS[item.bin];
+    var card = el("div", "card");
+    card.style.borderLeft = "6px solid " + bin.color;
+
+    var verdict = el("span", "verdict",
+      item.bin === "general" ? "Not recyclable — keep out of recycling bins" : "Recyclable");
+    verdict.style.background = bin.color;
+    card.appendChild(verdict);
+
+    card.appendChild(el("p", "bin-name", bin.name));
+    card.appendChild(el("p", "item-label", item.label));
+    card.appendChild(el("p", "note", item.note));
+    card.appendChild(el("p", "where", "Where: " + bin.where));
+    if (bin.quirk && item.bin !== "general") {
+      card.appendChild(el("p", "quirk", "Heads-up: " + bin.quirk));
+    }
+    card.appendChild(sourceLink());
+    result.appendChild(card);
+  }
+})();
+</script>
+</body>
+</html>
